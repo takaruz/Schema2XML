@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<checkstyle version="1.3.0">
+  <file name="schema2XML.inc.php">
+    <error line="0" severity="error" message="Only one @package tag is allowed" source="phpDocumentor.file.PPC:ERR-50001"/>
+    <error line="39" severity="error" message="No summary for property $user" source="phpDocumentor.file.PPC:ERR-50007"/>
+    <error line="40" severity="error" message="No summary for property $passwd" source="phpDocumentor.file.PPC:ERR-50007"/>
+    <error line="41" severity="error" message="No summary for property $dbname" source="phpDocumentor.file.PPC:ERR-50007"/>
+    <error line="42" severity="error" message="No summary for property $port" source="phpDocumentor.file.PPC:ERR-50007"/>
+  </file>
+</checkstyle>

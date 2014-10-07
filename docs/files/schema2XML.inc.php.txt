@@ -1,5 +1,4 @@
-﻿
-<?php 
+﻿<?php 
 /**
  * File: Schema2XML.inc.php
  *
@@ -9,7 +8,7 @@
  * @package  Schema2XML_Lib
  * @author   Pongpat Poapetch <p.poapetch@gmail.com>
  * @license  http://www.php.net/license/3_01.txt  PHP License 3.01
- * @version  GIT: $Id$ In development. Very unstable.
+ * @version  GIT: master In development. Very unstable.
  * @link     http://php.net/manual/en/book.pgsql.php
  * @todo     add another Database support
  */
@@ -21,17 +20,26 @@
  * @package  Schema2XML_Lib
  * @author   Pongpat Poapetch <p.poapetch@gmail.com>
  * @license  http://www.php.net/license/3_01.txt  PHP License 3.01
- * @version  GIT: $Id$ In development. Very unstable.
+ * @version  GIT: master In development. Very unstable.
  * @link     http://php.net/manual/en/book.pgsql.php
  * @todo     add another Database support
  */
  
 Class DBDetail
 {
+
+    /**
+    * @var string $host   contain hostname from init function.
+    * @var string $user   contain username from init function.
+    * @var string $passwd contain password from init function.
+    * @var string $dbname contain databasename from init function.    
+    * @var string $port   contain port number from init function. DEFAULT is '5432'.
+    */
     protected $host;
     protected $user;
     protected $passwd;
     protected $dbname;
+    protected $port;
 
     /**
     * Constructor to correct parameter that using in establish connection
@@ -40,15 +48,17 @@ Class DBDetail
     * @param string $user   username to connect database.
     * @param string $passwd password to connect database.
     * @param string $dbname database name.
+    * @param string $port   port number, DEFAULT value is 5432. 
     *
     * @return void
     */
-    function __construct($host, $user, $passwd, $dbname)
+    function __construct($host, $user, $passwd, $dbname, $port=5432)
     {
         $this->host = $host;
         $this->user = $user;
         $this->passwd = $passwd;
         $this->dbname = $dbname;
+        $this->port = $port;
     }
 
     /**
@@ -75,9 +85,11 @@ Class DBDetail
         }
         set_error_handler("exceptionErrorHandler");
         try {
-            $con_str = "host=$this->host user=$this->user ";
-            $con_str .= "dbname=$this->dbname password=$this->passwd";
+            $con_str  = "host=$this->host user=$this->user dbname=$this->dbname ";
+            $con_str .= "password=$this->passwd port=$this->port";
             $conn = pg_connect($con_str);
+            // unset password variable because no need anymore. 
+            unset($this->passwd);
         } Catch (Exception $e) {
             Echo $e->getMessage();
         }
@@ -88,7 +100,7 @@ Class DBDetail
     *
     * @param string $query query statement.
     *
-    * @return resultSet
+    * @return result
     */
     function get($query)
     {
@@ -97,13 +109,13 @@ Class DBDetail
     }
 
     /**
-    * Get schemas list.
+    * Get schemas list that owner by $user.
     *
-    * @return resultSet
+    * @return result
     */
     function getSchemas()
     {
-        $query = 'SELECT schema_name from information_schema.schemata';
+        $query  = 'SELECT schema_name from information_schema.schemata';
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
         return $result;
     }
@@ -113,11 +125,11 @@ Class DBDetail
     *
     * @param string $schema schema name, DEFAULT is 'public'
     *
-    * @return resultSet
+    * @return result
     */
     function getTables($schema='public')
     {  
-        $query = "SELECT table_name FROM information_schema.tables ";
+        $query  = "SELECT table_name FROM information_schema.tables ";
         $query .= "WHERE table_schema='$schema' AND table_type='BASE TABLE'";
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
         return $result;
@@ -128,11 +140,11 @@ Class DBDetail
     *
     * @param string $schema schema name, DEFAULT is 'public'
     *
-    * @return resultSet
+    * @return result
     */
     function getViews($schema='public')
     {  
-        $query = "SELECT table_name FROM information_schema.tables ";
+        $query  = "SELECT table_name FROM information_schema.tables ";
         $query .= "WHERE table_schema='$schema' AND table_type='VIEW'";
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
         return $result;
@@ -144,11 +156,11 @@ Class DBDetail
     * @param string $table  table name
     * @param string $schema schema name, DEFAULT is 'public'
     *
-    * @return resultSet
+    * @return result
     */
     function getColumns($table, $schema='public')
     {
-        $query = "SELECT * FROM information_schema.columns ";
+        $query  = "SELECT * FROM information_schema.columns ";
         $query .= "WHERE table_schema='$schema' AND table_name='$table'";
         $result = pg_query($query) or die('Query failed: ' . pg_last_error());
         return $result;
@@ -206,9 +218,27 @@ Class DBDetail
     }
 
     /**
-    * Debug result set from query statement.
+    * Return validation massage that check status of database.
     *
-    * @param resultSet $result result set from query statement
+    * @return string
+    */
+    function validate() 
+    {
+        if ($this->getNumSchemas() == 0) {
+            $msg  = "Warning: number of schemas for user=$this->user is 0. ";
+            $msg .= "Hence, schema will not show.";
+            return $msg;
+        }
+        if ($this->getNumTables() == 0) {
+            
+        }
+        return "all passed !!";
+    }
+
+    /**
+    * Debug result resouce from query statement.
+    *
+    * @param result $result result resource from query statement
     *
     * @return void
     */
@@ -222,7 +252,7 @@ Class DBDetail
     /**
     * Get result from query statement to array.
     *
-    * @param resultSet $result result set from query statement
+    * @param result $result result resource from query statement
     *
     * @return array
     */
@@ -267,12 +297,14 @@ Class DBDetail
             $table_num = $this->getNumTables($schema_name);
             $tables = $this->getResultArray($this->getTables($schema_name));
             $view_num = $this->getNumViews($schema_name);
-            $views = $this->getResultArray($this->getViews($schema_name));            
+            $views = $this->getResultArray($this->getViews($schema_name));
             // ==========================================================
             $writer->startElement('schema');
             $writer->writeAttribute('name', $schema_name);
             $writer->writeAttribute('table_num', $table_num);
-            if ($detail) $writer->writeAttribute('view_num', $view_num);
+            if ($detail) {
+                $writer->writeAttribute('view_num', $view_num);
+            }
             // ==== Table loop ====
             for ($j=0; $j < $table_num; $j++) {
                 // ==== Declare local variable ====
