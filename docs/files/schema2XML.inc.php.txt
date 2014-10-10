@@ -7,9 +7,9 @@
  * @category Backend
  * @package  Schema2XML_Lib
  * @author   Pongpat Poapetch <p.poapetch@gmail.com>
- * @license  http://www.php.net/license/3_01.txt  PHP License 3.01
+ * @license  The MIT License (MIT) Copyright (c) 2014 takaruz
  * @version  GIT: master In development. Very unstable.
- * @link     http://php.net/manual/en/book.pgsql.php
+ * @link     https://github.com/takaruz/Schema2XML
  * @todo     add another Database support
  */
  
@@ -19,9 +19,9 @@
  * @category Backend
  * @package  Schema2XML_Lib
  * @author   Pongpat Poapetch <p.poapetch@gmail.com>
- * @license  http://www.php.net/license/3_01.txt  PHP License 3.01
+ * @license  The MIT License (MIT) Copyright (c) 2014 takaruz
  * @version  GIT: master In development. Very unstable.
- * @link     http://php.net/manual/en/book.pgsql.php
+ * @link     https://github.com/takaruz/Schema2XML
  * @todo     add another Database support
  */
  
@@ -29,12 +29,16 @@ Class DBDetail
 {
 
     /**
-    * @var string $host   contain hostname from init function.
-    * @var string $user   contain username from init function.
-    * @var string $passwd contain password from init function.
-    * @var string $dbname contain databasename from init function.    
-    * @var string $port   contain port number from init function. DEFAULT is '5432'.
+    * @var connection $conn   contain a connection resouce.     
+    * @var string     $dbms   contain DBMSs from init function.    
+    * @var string     $host   contain hostname from init function.
+    * @var string     $user   contain username from init function.
+    * @var string     $passwd contain password from init function.
+    * @var string     $dbname contain databasename from init function.    
+    * @var integer    $port   contain port number from init function. DEFAULT is '0'.
     */
+    protected $conn;
+    protected $dbms;
     protected $host;
     protected $user;
     protected $passwd;
@@ -44,25 +48,38 @@ Class DBDetail
     /**
     * Constructor to correct parameter that using in establish connection
     *
-    * @param string $host   assign hostname to open connection.
-    * @param string $user   username to connect database.
-    * @param string $passwd password to connect database.
-    * @param string $dbname database name.
-    * @param string $port   port number, DEFAULT value is 5432. 
+    * @param string  $dbms   contain DBMSs from init function. DOMAIN: postgres, mysql
+    * @param string  $host   assign hostname to open connection.
+    * @param string  $user   username to connect database.
+    * @param string  $passwd password to connect database.
+    * @param string  $dbname database name.
+    * @param integer $port   port number, DEFAULT value is null. 
     *
     * @return void
     */
-    function __construct($host, $user, $passwd, $dbname, $port=5432)
+    function __construct($dbms, $host, $user, $passwd, $dbname, $port=null)
     {
+        // include_once("/driver/query_statment.php");
+
+        $this->dbms = $dbms;
         $this->host = $host;
         $this->user = $user;
         $this->passwd = $passwd;
         $this->dbname = $dbname;
-        $this->port = $port;
+        
+        if (!isset($port)) {
+            $this->port = $port;
+        } else {
+            if (strtolower($dbms) == 'postgres') {
+                $this->port = 5432;
+            } elseif (strtolower($dbms) == 'mysql') {
+                $this->port = 3306;
+            } 
+        }
     }
 
     /**
-    * establish connection to dabase
+    * establish connection to database.
     *
     * @return void
     */
@@ -84,10 +101,19 @@ Class DBDetail
             throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
         }
         set_error_handler("exceptionErrorHandler");
+
         try {
-            $con_str  = "host=$this->host user=$this->user dbname=$this->dbname ";
-            $con_str .= "password=$this->passwd port=$this->port";
-            $conn = pg_connect($con_str);
+            $con_str  = "host=$this->host user=$this->user dbname=$this->dbname password=$this->passwd port=$this->port";
+
+            if ($this->dbms == 'postgres') {
+                $this->conn = pg_connect($con_str);
+                require_once("driver/postgres.php");
+                putenv("DEFAULT_SCHEMA=public");
+            } elseif ($this->dbms == 'mysql') {
+                $this->conn = mysqli_connect($this->host, $this->user, $this->passwd, $this->dbname, $this->port);
+                require_once("driver/mysqli.php");
+                putenv("DEFAULT_SCHEMA=$this->user");
+            }
             // unset password variable because no need anymore. 
             unset($this->passwd);
         } Catch (Exception $e) {
@@ -104,65 +130,61 @@ Class DBDetail
     */
     function get($query)
     {
-        $result = pg_query($query) or die('Query failed: ' . pg_last_error());
+        $result = Driver::get($this->conn);
         return $result;
     }
 
     /**
-    * Get schemas list that owner by $user.
+    * Get schemas list that owner by $user except .
     *
     * @return result
     */
     function getSchemas()
     {
-        $query  = 'SELECT schema_name from information_schema.schemata';
-        $result = pg_query($query) or die('Query failed: ' . pg_last_error());
+        $result = Driver::getSchemas($this->conn);
         return $result;
     }
 
     /**
     * Get tables list from schema from passing argument.
     *
-    * @param string $schema schema name, DEFAULT is 'public'
+    * @param string $schema schema name, DEFAULT is 'null'
     *
     * @return result
     */
-    function getTables($schema='public')
+    function getTables($schema=null)
     {  
-        $query  = "SELECT table_name FROM information_schema.tables ";
-        $query .= "WHERE table_schema='$schema' AND table_type='BASE TABLE'";
-        $result = pg_query($query) or die('Query failed: ' . pg_last_error());
+        $schema = isset($schema) ? $schema : getenv("DEFAULT_SCHEMA");
+        $result = Driver::getTables($this->conn, $schema);
         return $result;
     }
 
     /**
     * Get views list from schema from passing argument.
     *
-    * @param string $schema schema name, DEFAULT is 'public'
+    * @param string $schema schema name, DEFAULT is 'null'
     *
     * @return result
     */
-    function getViews($schema='public')
+    function getViews($schema=null)
     {  
-        $query  = "SELECT table_name FROM information_schema.tables ";
-        $query .= "WHERE table_schema='$schema' AND table_type='VIEW'";
-        $result = pg_query($query) or die('Query failed: ' . pg_last_error());
+        $schema = isset($schema) ? $schema : getenv("DEFAULT_SCHEMA");
+        $result = Driver::getViews($this->conn, $schema);
         return $result;
-    }    
+    }
 
     /**
     * Get columns list from table and schema by passing arguments.
     *
     * @param string $table  table name
-    * @param string $schema schema name, DEFAULT is 'public'
+    * @param string $schema schema name, DEFAULT is 'null'
     *
     * @return result
     */
-    function getColumns($table, $schema='public')
+    function getColumns($table, $schema=null)
     {
-        $query  = "SELECT * FROM information_schema.columns ";
-        $query .= "WHERE table_schema='$schema' AND table_name='$table'";
-        $result = pg_query($query) or die('Query failed: ' . pg_last_error());
+        $schema = isset($schema) ? $schema : getenv("DEFAULT_SCHEMA");
+        $result = Driver::getColumns($this->conn, $table, $schema);
         return $result;
     }
 
@@ -173,48 +195,51 @@ Class DBDetail
     */
     function getNumSchemas()
     {
-        $result = $this->getSchemas();
-        return pg_num_rows($result);
+        $result = Driver::getNumSchemas($this->conn);
+        return $result;
     }
 
     /**
     * Get number of tables from query statement.
     *
-    * @param string $schema schema name, DEFAULT is 'public'
+    * @param string $schema schema name, DEFAULT is 'null'
     *
     * @return integer
     */
-    function getNumTables($schema='public')
+    function getNumTables($schema=null)
     {
-        $result = $this->getTables($schema);
-        return pg_num_rows($result);
+        $schema = isset($schema) ? $schema : getenv("DEFAULT_SCHEMA");
+        $result = Driver::getNumTables($this->conn, $schema);
+        return $result;
     }
 
     /**
     * Get number of tables from query statement.
     *
-    * @param string $schema schema name, DEFAULT is 'public'
+    * @param string $schema schema name, DEFAULT is 'null'
     *
     * @return integer
     */
-    function getNumViews($schema='public')
+    function getNumViews($schema=null)
     {
-        $result = $this->getViews($schema);
-        return pg_num_rows($result);
-    }    
+        $schema = isset($schema) ? $schema : getenv("DEFAULT_SCHEMA");
+        $result = Driver::getNumViews($this->conn, $schema);
+        return $result;
+    }
 
     /**
     * Get number of columns from query statement.
     *
     * @param string $table  table name
-    * @param string $schema schema name, DEFAULT is 'public'
+    * @param string $schema schema name, DEFAULT is 'null'
     *
     * @return integer
     */
-    function getNumColumns($table, $schema='public')
+    function getNumColumns($table, $schema=null)
     {
-        $result = $this->getColumns($table, $schema);
-        return pg_num_rows($result);
+        $schema = isset($schema) ? $schema : getenv("DEFAULT_SCHEMA");
+        $result = Driver::getNumColumns($this->conn, $table, $schema);
+        return $result;
     }
 
     /**
@@ -236,7 +261,7 @@ Class DBDetail
     }
 
     /**
-    * Debug result resouce from query statement.
+    * print all result resouce from query statement.
     *
     * @param result $result result resource from query statement
     *
@@ -244,9 +269,7 @@ Class DBDetail
     */
     function printDebug($result)
     {
-        echo '<pre>';
-        print_r(pg_fetch_all($result));
-        echo '</pre>';
+        Driver::printDebug($result);
     }
 
     /**
@@ -258,8 +281,10 @@ Class DBDetail
     */
     function getResultArray($result)
     {
-        return pg_fetch_all($result);
+        return Driver::getResultArray($result);
     }
+
+
 
     /**
     * Export database hierarchy to xml.
@@ -277,6 +302,7 @@ Class DBDetail
         // ==========================================================
         $writer = new XMLWriter();  
         $writer->openURI($uri);
+        // $writer->openMemory();
         $writer->startDocument('1.0', 'UTF-8');
         $writer->setIndent(true);
         $writer->setIndentString("    ");
@@ -318,10 +344,11 @@ Class DBDetail
                 $writer->writeAttribute('column_num', $column_num);
                 // ==== Column loop ====
                 for ($k=0; $k < $column_num; $k++) {
+                    $columns[$k] = array_change_key_case($columns[$k], CASE_LOWER);
                     $index = $columns[$k]['ordinal_position'];
                     $writer->startElement('column');
                     $writer->writeAttribute('index', $index);
-                    $writer->writeAttribute('type', $columns[$k]['udt_name']);
+                    $writer->writeAttribute('type', $columns[$k][Driver::COLUMN_TYPE]);
                     $writer->text($columns[$k]['column_name']);
                     $writer->endElement();  // End of Column
                 }
@@ -342,10 +369,11 @@ Class DBDetail
                     $writer->writeAttribute('column_num', $column_num);
                     // ==== Column loop ====
                     for ($k=0; $k < $column_num; $k++) {
+                        $columns[$k] = array_change_key_case($columns[$k], CASE_LOWER);
                         $index = $columns[$k]['ordinal_position'];
                         $writer->startElement('column');
                         $writer->writeAttribute('index', $index);
-                        $writer->writeAttribute('type', $columns[$k]['udt_name']);
+                        $writer->writeAttribute('type', $columns[$k][Driver::COLUMN_TYPE]);
                         $writer->text($columns[$k]['column_name']);
                         $writer->endElement();  // End of Column
                     }
@@ -356,6 +384,8 @@ Class DBDetail
         }
         $writer->endElement();  // End of Database.
         $writer->endDocument();  // End of Document. 
+
+        // echo $oXMLWriter->outputMemory(TRUE);
         $writer->flush(); 
     }
 }
