@@ -1,0 +1,32 @@
+.sidebar {
+	background: #fafafa;
+	padding: 32px 20px;
+}
+
+.main-div {
+	background: #dddddd;
+	padding: 32px 20px;
+}
+
+span.prefix, label.prefix {
+	font-size: 11px;
+}
+
+pre {
+margin-bottom: 15px;
+}
+
+pre code {
+display: block;
+padding: 0.5em;
+background: #FAFAFA;
+color: #333;
+}
+
+pre code .code-container {
+margin: 10px 0px;
+padding: 5px;
+overflow-x: auto;
+line-height: 1.3rem;
+font-weight: normal;
+}
