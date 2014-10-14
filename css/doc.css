@@ -1,16 +1,23 @@
+.top-bar {
+	z-index: 10;	
+}
+
 .sidebar {
 	background: #fafafa;
 	padding: 32px 20px;
+	padding-bottom: 10px;
 }
 
 .main-div {
 	background: #dddddd;
 	padding: 32px 20px;
+	padding-bottom: 10px;
 }
 
 span.prefix, label.prefix {
 	font-size: 11px;
 }
+
 
 pre {
 margin-bottom: 15px;
@@ -29,4 +36,38 @@ padding: 5px;
 overflow-x: auto;
 line-height: 1.3rem;
 font-weight: normal;
+}
+
+.button-select {
+	width: 100%;
+	margin-bottom: 0px;
+}
+
+table tr td {
+	padding: 0rem 0.625rem;
+	font-size: 0.875rem;
+	color: #222222;
+	text-align: left;
+}
+
+.side-form {
+  transform: translate(0px, 0px);
+  transition: all 1s ease-in;
+}
+
+.-hidden-side {
+	transform: translate(-300px, 0px);
+	transition: all 1s ease-out;
+	visibility: hidden;
+}
+
+.center-view {
+  transform: translate(0px, 0px);
+  transition: all 1s ease-in;
+}
+
+.-hidden-center {
+	transform: translate(0px, -150px);
+	transition: all 1s ease-out;
+	visibility: hidden;
 }

@@ -1,5 +1,7 @@
 $(document).ready(function()
 {        
+    var xml;
+
     $("#login").on('click', function(e){
     	var dbms 	 = $('#dbms_type').val();
     	var username = $('#username').val();
@@ -13,19 +15,30 @@ $(document).ready(function()
         			password: password,
         			hostname: hostname, 
         			database: database, 
-        			port: port
+        			port: port,
+                    action: 'login'
         			};
         $.post( "login.php", msg, function( data ) {
-        	// var result = jQuery.parseJSON(data);
-        	// alert( "success "+ result.name );
-        	console.log( data );
-        	// $("#main-div").append('<pre><code>'+data+'</code></pre>');
-        	$("#main-div").append("asdf");
+            console.log( data );
+        	var result = jQuery.parseJSON(data);
+            
+        	console.log( result[0] );
+            if (data == -1) {
+                alert("No schema in database: " + database);
+                return;
+            }
+            for (var i = 0; i < result.length; i++) {
+                var html  = "<tr>";
+                    html += "<td>"+result[i][0]+"</td>";
+                    html += "<td>"+result[i][1]+"</td>";
+                    html += "<td>"+result[i][2]+"</td>";
+                    html += '<td><button href="#" id="select_schema" class="button tiny button-select" value="'+result[i][1]+'" onclick="test()">Select</button></td>';
+                    html += "</tr>";
+                $('#schema_body').append(html);
+            };
+            $("#side-form").toggleClass("-hidden-side");
+            $("#center-view").toggleClass("-hidden-center");
 		});
-		
-		//var select = "<select id=\"tester\"><option value=\"-\" style=\"text-indent: 5px;\">Select DBMSs</option><option value=\"mysql\">Mysql</option><option value=\"postgres\">Postgres</option></select>";
-		// $('#sider').append(select);
-
 	});
 
 	$("#dbms_type").on('change', function(e){
@@ -39,8 +52,53 @@ $(document).ready(function()
 		}
 	});
 
-	$("#tester").on('change', function(e){
-		alert("asdf");
-	});
+/*
+    $( document ).on( 'click', '#select_schema', function (e) {
+        var msg = { dbms:     $('#dbms_type').val(), 
+                    username: $('#username').val(),
+                    password: $('#password').val(),
+                    hostname: $('#hostname').val(), 
+                    database: $('#database').val(), 
+                    port:     $('#port').val(),
+                    action:   'getxml'
+                    };
+        $.post( "login.php", msg, function( data ) {
+            console.log( data );
+            // var result = jQuery.parseJSON(data);
+            // console.log( result[0] );
+            $('.main-div').append('xxxx');
+        });
+    });
+*/
+
+
+    $.when(test()).done(function(e){
+        $('.main-div').append(xml);
+    });
+
+    $(".xxx").on('click', function(e){
+        $("#side-form").toggleClass("-hidden-side");
+        $("#center-view").toggleClass("-hidden-center");
+    });
+
+    function test() {
+        var msg = { dbms:     $('#dbms_type').val(), 
+                    username: $('#username').val(),
+                    password: $('#password').val(),
+                    hostname: $('#hostname').val(), 
+                    database: $('#database').val(), 
+                    port:     $('#port').val(),
+                    action:   'getxml'
+                    };
+        $.post( "login.php", msg, function( data ) {
+            console.log( data );
+            xml = data;
+            // var result = jQuery.parseJSON(data);
+            // console.log( result[0] );
+            // $('.main-div').append('xxxx');
+        });
+    }
 
 });
+
+

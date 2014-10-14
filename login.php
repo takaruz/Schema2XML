@@ -1,19 +1,56 @@
 <?php 
-	$user = $_POST['username'];
-	$pass = $_POST['password'];
-	$host = $_POST['hostname'];
-	$dbname = $_POST['database'];
-	$dbms = $_POST['dbms'];
-	$port = $_POST['port'];
-	
-	
-
 	require_once('lib/schema2XML.inc.php');
-	$dbcon = new DBDetail($dbms, $host, $user, $pass, $dbname);
-	$dbcon->init();
+	session_start();
 
-	$dbcon->exportXML();
+	if(isset($_POST['action']) && !empty($_POST['action'])) {
+	    $action = $_POST['action'];
+	    switch($action) {
+	        case 'login' : login(); break;
+	        case 'getxml' : getXML(); break;
+	    	}
+	}
 
-	// echo json_encode(array("name"=>$user,"time"=>"2pm")); 
+	function login() {
+		$user = $_POST['username'];
+		$pass = $_POST['password'];
+		$host = $_POST['hostname'];
+		$dbname = $_POST['database'];
+		$dbms = $_POST['dbms'];
+		$port = $_POST['port'];
+		$dbcon = new DBDetail($dbms, $host, $user, $pass, $dbname);
+		$result = $dbcon->init();
+		// print($result);
+
+		showSchemaTable($dbcon);
+		// $dbcon->exportXML();
+		// echo json_encode(array("name"=>$user,"time"=>"2pm")); 
+	}
+
+	function showSchemaTable($dbcon) {
+		$schemas = $dbcon->getResultArray($dbcon->getSchemas());
+		$result = array();
+		for ($i=0; $i < sizeof($schemas); $i++) { 
+			$name = $schemas[$i]['schema_name'];
+			$tables = $dbcon->getNumTables($name);
+			// $tables = $dbcon->getResultArray($dbcon->getTables($schema['schema_name']));
+			// echo json_encode($tables);
+			$result[] = array($i, $name, $tables);
+		}
+		echo json_encode($result);
+		// echo json_encode($schemas);
+	}
+
+	function getXML() {
+		$user = $_POST['username'];
+		$pass = $_POST['password'];
+		$host = $_POST['hostname'];
+		$dbname = $_POST['database'];
+		$dbms = $_POST['dbms'];
+		$port = $_POST['port'];
+		echo $user.$pass;
+		$dbcon = new DBDetail($dbms, $host, $user, $pass, $dbname);
+		$result = $dbcon->init();
+		$dbcon->exportXML();
+	}
 
 ?>

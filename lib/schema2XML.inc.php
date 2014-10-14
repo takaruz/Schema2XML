@@ -116,8 +116,10 @@ Class DBDetail
             }
             // unset password variable because no need anymore. 
             unset($this->passwd);
+            return 0;
         } Catch (Exception $e) {
             Echo $e->getMessage();
+            return -1;
         }
     }
 

@@ -17,9 +17,9 @@ meta.foundation-mq-xlarge {
   font-family: "/only screen and (min-width:90.063em)/";
   width: 90.063em; }
 
-meta.foundation-mq-xxlarge {
+/*meta.foundation-mq-xxlarge {
   font-family: "/only screen and (min-width:120.063em)/";
-  width: 120.063em; }
+  width: 120.063em; }*/
 
 meta.foundation-data-attribute-namespace {
   font-family: false; }
