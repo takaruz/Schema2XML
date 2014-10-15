@@ -132,7 +132,7 @@ Class DBDetail
     */
     function get($query)
     {
-        $result = Driver::get($this->conn);
+        $result = Driver::get($this->conn, $query);
         return $result;
     }
 
@@ -385,9 +385,7 @@ Class DBDetail
             $writer->endElement(); // End of Schema.
         }
         $writer->endElement();  // End of Database.
-        $writer->endDocument();  // End of Document. 
-
-        // echo $oXMLWriter->outputMemory(TRUE);
+        $writer->endDocument();  // End of Document.
         $writer->flush(); 
     }
 }

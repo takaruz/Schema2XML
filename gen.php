@@ -30,7 +30,7 @@
         <ul class="right">
           <li class="divider"></li>
           <!-- Anchor -->
-          <li><a href="#" class="xxx">Generic Button</a></li>
+          <li><a href="#" class="xxx">Logout</a></li>
           <li class="divider"></li>
         </ul>
       </section>
@@ -51,7 +51,7 @@
             <span class="prefix">Username</span>
           </div>
           <div class="small-9 large-8 columns">
-            <input type="text" id="username" value="thesis">
+            <input type="text" id="username" value="takaruz">
           </div>
         </div>
         <div class="row collapse">
@@ -83,7 +83,7 @@
             <span class="prefix">Database</span>
           </div>
           <div class="small-9 large-8 columns">
-            <input type="text" id="database" value="thesis">
+            <input type="text" id="database" value="takaruz">
           </div>
         </div>
         <div class="row">
@@ -107,25 +107,44 @@
 
     <div id="center-view" class="large-9 medium-8 columns center-view -hidden-center">
       <div class="main-div">
-        <table id="schema_table" class="show" width="100%">
-          <thead>
-            <tr>
-              <th width="20%">No.</th>
-              <th width="35%">Schema name</th>
-              <th width="25%">Total table in schema</th>
-              <th width="20%">Select Schema</th>
-            </tr>
-          </thead>
-          <tbody id="schema_body">
-          </tbody>
-        </table>
+        <div class="table-top">
+          <h5>Schema Table</h5>
+          <table id="schema_table" class="show" width="100%">
+            <thead>
+              <tr>
+                <th width="20%">No.</th>
+                <th width="35%">Schema name</th>
+                <th width="25%">Total table in schema</th>
+                <th width="20%">Select Schema</th>
+              </tr>
+            </thead>
+            <tbody id="schema_body">
+            </tbody>
+          </table>
+        </div>
+        <div class="table-bottom">
+        </div>
+
+        <ul class="small-block-grid-1 medium-block-grid-1">
+          <li>
+            <dl class="accordion schema-accordion" data-accordion="database-group"></dl>
+          </li>
+        </ul>
       </div>
     </div>            
     
     <script src="js/vendor/jquery.js"></script>
     <script src="js/foundation.min.js"></script>
     <script>
-      $(document).foundation();
+      $(document).foundation({
+        accordion: {
+          active_class: 'active',
+          multi_expand: true,
+          toggleable: true
+        }
+      });
     </script>
   </body>
 </html>
+
+

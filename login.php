@@ -2,7 +2,7 @@
 	require_once('lib/schema2XML.inc.php');
 	session_start();
 
-	if(isset($_POST['action']) && !empty($_POST['action'])) {
+	if(isset($_POST['action'])) {
 	    $action = $_POST['action'];
 	    switch($action) {
 	        case 'login' : login(); break;
@@ -20,10 +20,7 @@
 		$dbcon = new DBDetail($dbms, $host, $user, $pass, $dbname);
 		$result = $dbcon->init();
 		// print($result);
-
 		showSchemaTable($dbcon);
-		// $dbcon->exportXML();
-		// echo json_encode(array("name"=>$user,"time"=>"2pm")); 
 	}
 
 	function showSchemaTable($dbcon) {
@@ -47,7 +44,6 @@
 		$dbname = $_POST['database'];
 		$dbms = $_POST['dbms'];
 		$port = $_POST['port'];
-		echo $user.$pass;
 		$dbcon = new DBDetail($dbms, $host, $user, $pass, $dbname);
 		$result = $dbcon->init();
 		$dbcon->exportXML();

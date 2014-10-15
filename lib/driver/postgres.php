@@ -28,7 +28,7 @@ class Driver
     /**
     * @var constant COLUMN_TYPE contain type string.
     */	
-    const COLUMN_TYPE = "udt_catalog";
+    const COLUMN_TYPE = "udt_name";
 
     /**
     * Get result from query statement from passing argument.
